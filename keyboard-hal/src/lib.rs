@@ -1,35 +1,45 @@
 #![no_std]
 
 pub use usb_device::prelude::*;
-use usb_device::{
-    bus::{UsbBus, UsbBusAllocator},
-    device::{UsbDeviceBuilder, UsbVidPid},
-};
 use usb_keyboard::UsbKeyboard;
 use usbd_hid::{
     descriptor::{KeyboardReport, SerializedDescriptor},
     hid_class::HIDClass,
 };
 
+// re-exports
+pub use atmega_hal as hal;
+pub use atmega_hal::pac;
+pub use avr_device::entry;
+pub use hal::Peripherals;
+pub use usb_device::bus::UsbBusAllocator;
+pub use usb_device::device::{
+    StringDescriptors, UsbDevice, UsbDeviceBuilder, UsbDeviceState, UsbVidPid,
+};
+pub use usb_device::LangID;
+pub use usb_device::UsbError;
+
 use keyboard_config::{MATRIX_COLS, MATRIX_ROWS};
 use layers::Layers;
 use matrix::Matrix;
 pub use port::pcb1::Pins;
+pub use usb::UsbBus;
 
 pub mod keyboard_config;
 pub mod keycodes;
 pub mod layers;
 pub mod matrix;
 pub mod port;
+pub mod usb;
 pub mod usb_keyboard;
 
-pub struct Keyboard<B: UsbBus + 'static> {
+pub struct Keyboard<B: usb_device::bus::UsbBus + 'static> {
     matrix: Matrix,
     layers: Layers,
     usb_keyboard: UsbKeyboard<B>,
 }
 
-impl<B: UsbBus + 'static> Keyboard<B> {
+impl<B: usb_device::bus::UsbBus + 'static> Keyboard<B> {
     pub fn new(pins: Pins, usb_bus: &'static UsbBusAllocator<B>) -> Self {
         let row0 = pins.row0.into_output().downgrade();
         let row1 = pins.row1.into_output().downgrade();
@@ -63,4 +73,18 @@ impl<B: UsbBus + 'static> Keyboard<B> {
         }
         self.matrix.last_state = new_state;
     }
+}
+
+/// Convenience macro to instantiate the [`Pins`] struct for this board.
+///
+/// # Example
+/// ```no_run
+/// let dp = arduino_hal::Peripherals::take().unwrap();
+/// let pins = arduino_hal::pins!(dp);
+/// ```
+#[macro_export]
+macro_rules! pins {
+    ($p:expr) => {
+        $crate::Pins::with_mcu_pins($crate::hal::pins!($p))
+    };
 }
