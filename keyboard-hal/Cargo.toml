@@ -1,0 +1,48 @@
+[package]
+name = "keyboard-hal"
+version = "0.1.0"
+authors = ["Felipe Coury <felipe.coury@gmail.com>"]
+edition = "2021"
+description = "Board support crate for popular AVR dev-boards"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rahix/avr-hal"
+keywords = ["avr", "keyboard"]
+categories = ["no-std", "embedded", "hardware-support"]
+
+[features]
+default = ["rt"]
+rt = ["avr-device/rt"]
+
+[dependencies]
+cfg-if = "1"
+embedded-hal = "1.0"
+ufmt = "0.2.0"
+usb-device = "0.3"
+usbd-hid = "0.7"
+
+[dependencies.embedded-hal-v0]
+version = "0.2.3"
+package = "embedded-hal"
+
+[dependencies.avr-hal-generic]
+path = "../avr-hal-generic/"
+
+[dependencies.atmega-hal]
+path = "../mcu/atmega-hal/"
+
+# Because this crate has its own check that at least one device is selected, we
+# can safely "circumvent" the check in `atmega-hal`.  Due to compile order,
+# this allows us to show our error instead of the one from `atmega-hal` (which
+# is much less helpful in this situation).
+features = ["atmega32u4", "disable-device-selection-error"]
+
+[dependencies.avr-device]
+version = "0.7"
+
+# Because this crate has its own check that at least one device is selected, we
+# can safely "circumvent" the check in `avr-device`.
+#
+# Why would we want that?  Otherwise, as `avr-device` is compiled first, its
+# error will be shown and ours won't which leads to a degraded user experience
+# as the displayed error message does not really tell what needs to be done...
+features = ["device-selected"]

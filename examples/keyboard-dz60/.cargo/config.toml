@@ -1,0 +1,9 @@
+[build]
+target = "../../avr-specs/avr-atmega32u4.json"
+
+[target.'cfg(target_arch = "avr")']
+runner = "ravedude dz60"
+
+[unstable]
+build-std = ["core"]
+

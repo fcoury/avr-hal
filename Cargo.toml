@@ -21,6 +21,7 @@ members = [
 
     # Higher level crates
     "arduino-hal",
+    "keyboard-hal",
 
     # Examples
     "examples/arduino-diecimila",
@@ -36,6 +37,9 @@ members = [
     "examples/sparkfun-promini-5v",
     "examples/trinket-pro",
     "examples/trinket",
+
+    # Keyboards
+    "examples/keyboard-dz60",
 ]
 exclude = [
     # The RAVEDUDE! Yeah!
