@@ -1,7 +1,7 @@
 use avr_device::atmega32u4::USB_DEVICE as USB;
 use core::sync::atomic::{AtomicBool, Ordering};
 use usb_device::{
-    bus::{PollResult, UsbBusAllocator},
+    bus::PollResult,
     endpoint::{EndpointAddress, EndpointType},
     UsbDirection,
 };
@@ -10,6 +10,7 @@ use usbd_hid::UsbError;
 const MAX_ENDPOINTS: usize = 7;
 
 #[derive(Clone, Copy)]
+#[allow(unused)]
 struct Endpoint {
     ep_type: EndpointType,
     max_size: u16,
@@ -111,24 +112,20 @@ impl usb_device::bus::UsbBus for UsbBus {
 
         match ep_dir {
             UsbDirection::Out => {
-                self.usb.uenum.write(|w| unsafe { w.bits(ep_num) });
+                self.usb.uenum.write(|w| w.bits(ep_num));
                 self.usb.ueconx.write(|w| w.epen().set_bit());
                 self.usb
                     .uecfg0x
-                    .write(|w| unsafe { w.eptype().bits(ep_type_bits).epdir().clear_bit() });
-                self.usb
-                    .uecfg1x
-                    .write(|w| unsafe { w.epsize().bits(ep_size_bits) });
+                    .write(|w| w.eptype().bits(ep_type_bits).epdir().clear_bit());
+                self.usb.uecfg1x.write(|w| w.epsize().bits(ep_size_bits));
             }
             UsbDirection::In => {
-                self.usb.uenum.write(|w| unsafe { w.bits(ep_num) });
+                self.usb.uenum.write(|w| w.bits(ep_num));
                 self.usb.ueconx.write(|w| w.epen().set_bit());
                 self.usb
                     .uecfg0x
-                    .write(|w| unsafe { w.eptype().bits(ep_type_bits).epdir().set_bit() });
-                self.usb
-                    .uecfg1x
-                    .write(|w| unsafe { w.epsize().bits(ep_size_bits) });
+                    .write(|w| w.eptype().bits(ep_type_bits).epdir().set_bit());
+                self.usb.uecfg1x.write(|w| w.epsize().bits(ep_size_bits));
             }
         }
 
@@ -144,7 +141,7 @@ impl usb_device::bus::UsbBus for UsbBus {
         self.configured.store(false, Ordering::SeqCst);
 
         for i in 0..MAX_ENDPOINTS {
-            self.usb.uenum.write(|w| unsafe { w.bits(i as u8) });
+            self.usb.uenum.write(|w| w.bits(i as u8));
             self.usb.ueconx.write(|w| w.epen().clear_bit());
         }
 
@@ -154,19 +151,19 @@ impl usb_device::bus::UsbBus for UsbBus {
     fn set_device_address(&self, addr: u8) {
         self.usb
             .udaddr
-            .write(|w| unsafe { w.uadd().bits(addr).adden().set_bit() });
+            .write(|w| w.uadd().bits(addr).adden().set_bit());
     }
 
     fn write(&self, ep_addr: EndpointAddress, buf: &[u8]) -> Result<usize, UsbError> {
         let idx = ep_addr.index();
         if let Some(ep) = &self.endpoints[idx] {
-            self.usb.uenum.write(|w| unsafe { w.bits(idx as u8) });
+            self.usb.uenum.write(|w| w.bits(idx as u8));
 
             while self.usb.ueintx.read().txini().bit_is_clear() {}
 
             let count = buf.len().min(ep.max_size as usize);
             for &byte in buf[..count].iter() {
-                self.usb.uedatx.write(|w| unsafe { w.bits(byte) });
+                self.usb.uedatx.write(|w| w.bits(byte));
             }
 
             self.usb
@@ -182,7 +179,7 @@ impl usb_device::bus::UsbBus for UsbBus {
     fn read(&self, ep_addr: EndpointAddress, buf: &mut [u8]) -> Result<usize, UsbError> {
         let idx = ep_addr.index();
         if let Some(ep) = &self.endpoints[idx] {
-            self.usb.uenum.write(|w| unsafe { w.bits(idx as u8) });
+            self.usb.uenum.write(|w| w.bits(idx as u8));
 
             while self.usb.ueintx.read().rxouti().bit_is_clear() {}
 
@@ -204,13 +201,13 @@ impl usb_device::bus::UsbBus for UsbBus {
 
     fn set_stalled(&self, ep_addr: EndpointAddress, stalled: bool) {
         let idx = ep_addr.index();
-        self.usb.uenum.write(|w| unsafe { w.bits(idx as u8) });
+        self.usb.uenum.write(|w| w.bits(idx as u8));
         self.usb.ueconx.modify(|_, w| w.stallrq().bit(stalled));
     }
 
     fn is_stalled(&self, ep_addr: EndpointAddress) -> bool {
         let idx = ep_addr.index();
-        self.usb.uenum.write(|w| unsafe { w.bits(idx as u8) });
+        self.usb.uenum.write(|w| w.bits(idx as u8));
         self.usb.ueconx.read().stallrq().bit()
     }
 

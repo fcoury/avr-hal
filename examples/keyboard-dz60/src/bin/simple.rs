@@ -1,10 +1,7 @@
 #![no_std]
 #![no_main]
 
-use keyboard_hal::{
-    pac, pins, usb, usb_bus, Keyboard, LangID, Pins, StringDescriptors, UsbBus, UsbBusAllocator,
-    UsbDeviceBuilder, UsbVidPid,
-};
+use keyboard_hal::{pins, usb_bus, Keyboard, UsbBus, UsbBusAllocator};
 use panic_halt as _;
 
 #[keyboard_hal::entry]
